@@ -1,64 +1,102 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useContacts } from "@/src/hooks/useContacts"
-import { Controller } from "react-hook-form"
-import { User, Phone, MapPin, Edit3, Trash2, Plus, Users, LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useContacts } from "@/src/hooks/useContacts";
+import { Controller } from "react-hook-form";
+import {
+  User,
+  Phone,
+  MapPin,
+  Edit3,
+  Trash2,
+  Plus,
+  Users,
+  LogOut,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+
+// ✅ Import Contact type from store
+import type { Contact } from "@/src/store/useContactStore";
+
+interface ContactFormData {
+  username: string;
+  phone: string;
+  address?: string | null;
+}
 
 const ContactForm: React.FC = () => {
-  const { contacts, addForm, onAdd, onUpdate, onDelete, isLoading, error } = useContacts()
-  const router = useRouter()
+  const {
+    contacts,
+    addForm,
+    onAdd,
+    onUpdate,
+    onDelete,
+    isLoading,
+    error,
+  } = useContacts();
+  const router = useRouter();
 
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [logoutLoading, setLogoutLoading] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
-  const handleEdit = (contact: any) => {
-    setEditingId(contact.id)
-    addForm.reset(contact)
-  }
+  // ✅ Handle edit action
+  const handleEdit = (contact: Contact) => {
+    setEditingId(contact.id);
 
+    // Replace null with undefined for RHF compatibility
+    const safeContact = {
+      ...contact,
+      address: contact.address ?? undefined,
+    };
+    addForm.reset(safeContact);
+  };
+
+  // ✅ Reset form
   const resetForm = () => {
-    setEditingId(null)
-    addForm.reset()
-  }
+    setEditingId(null);
+    addForm.reset();
+  };
 
-  const handleSubmit = (data: any) => {
+  // ✅ Handle submit
+  const handleSubmit = (data: ContactFormData) => {
+    const safeData = {
+      ...data,
+      address: data.address ?? undefined,
+    };
+
     if (editingId) {
-      onUpdate(editingId, data)
+      onUpdate(editingId, safeData);
     } else {
-      onAdd(data)
+      onAdd(safeData);
     }
-    resetForm()
-  }
+    resetForm();
+  };
 
-  // Logout function
+  // ✅ Logout
   const handleLogout = async () => {
-    setLogoutLoading(true)
+    setLogoutLoading(true);
     try {
-      // Clear any auth tokens from localStorage
-      localStorage.removeItem("authToken")
-      localStorage.removeItem("userData")
-      
-      // Clear any session storage items if needed
-      sessionStorage.removeItem("authToken")
-      
-      // Alternatively, you might want to call an API endpoint to logout
-      // await fetch('/api/auth/logout', { method: 'POST' })
-      
-      // Redirect to login page
-      router.push("/login")
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userData");
+      sessionStorage.removeItem("authToken");
+      router.push("/login");
     } catch (error) {
-      console.error("Logout error:", error)
+      console.error("Logout error:", error);
     } finally {
-      setLogoutLoading(false)
+      setLogoutLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -75,14 +113,20 @@ const ContactForm: React.FC = () => {
             <LogOut className="h-4 w-4" />
             {logoutLoading ? "Logging out..." : "Logout"}
           </Button>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Contact Manager</h1>
-          <p className="text-muted-foreground text-lg">Organize and manage your contacts efficiently</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            Contact Manager
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Organize and manage your contacts efficiently
+          </p>
         </div>
 
         {/* Error Alert */}
         {error && (
           <Alert variant="destructive" className="max-w-2xl mx-auto">
-            <AlertDescription>{error instanceof Error ? error.message : String(error)}</AlertDescription>
+            <AlertDescription>
+              {error instanceof Error ? error.message : String(error)}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -93,23 +137,33 @@ const ContactForm: React.FC = () => {
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-100">
-                    {editingId ? <Edit3 className="h-5 w-5 text-blue-600" /> : <Plus className="h-5 w-5 text-blue-600" />}
+                    {editingId ? (
+                      <Edit3 className="h-5 w-5 text-blue-600" />
+                    ) : (
+                      <Plus className="h-5 w-5 text-blue-600" />
+                    )}
                   </div>
                   <div>
-                    <CardTitle className="text-xl">{editingId ? "Edit Contact" : "Add New Contact"}</CardTitle>
+                    <CardTitle className="text-xl">
+                      {editingId ? "Edit Contact" : "Add New Contact"}
+                    </CardTitle>
                     <CardDescription className="text-sm">
-                      {editingId ? "Update contact information" : "Fill in the details to add a new contact"}
+                      {editingId
+                        ? "Update contact information"
+                        : "Fill in the details to add a new contact"}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <form onSubmit={addForm.handleSubmit(handleSubmit)} className="space-y-5">
-                  {/* Name Field */}
+                <form
+                  onSubmit={addForm.handleSubmit(handleSubmit)}
+                  className="space-y-5"
+                >
+                  {/* Name */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Full Name
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <User className="h-4 w-4" /> Full Name
                     </label>
                     <Controller
                       name="username"
@@ -127,18 +181,19 @@ const ContactForm: React.FC = () => {
                             disabled={isLoading}
                           />
                           {fieldState.error && (
-                            <p className="text-sm text-destructive font-medium">{fieldState.error.message}</p>
+                            <p className="text-sm text-destructive font-medium">
+                              {fieldState.error.message}
+                            </p>
                           )}
                         </>
                       )}
                     />
                   </div>
 
-                  {/* Phone Field */}
+                  {/* Phone */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      Phone Number
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <Phone className="h-4 w-4" /> Phone Number
                     </label>
                     <Controller
                       name="phone"
@@ -156,18 +211,20 @@ const ContactForm: React.FC = () => {
                             disabled={isLoading}
                           />
                           {fieldState.error && (
-                            <p className="text-sm text-destructive font-medium">{fieldState.error.message}</p>
+                            <p className="text-sm text-destructive font-medium">
+                              {fieldState.error.message}
+                            </p>
                           )}
                         </>
                       )}
                     />
                   </div>
 
-                  {/* Address Field */}
+                  {/* Address */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Address <span className="text-muted-foreground">(optional)</span>
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <MapPin className="h-4 w-4" /> Address{" "}
+                      <span className="text-muted-foreground">(optional)</span>
                     </label>
                     <Controller
                       name="address"
@@ -185,7 +242,9 @@ const ContactForm: React.FC = () => {
                             disabled={isLoading}
                           />
                           {fieldState.error && (
-                            <p className="text-sm text-destructive font-medium">{fieldState.error.message}</p>
+                            <p className="text-sm text-destructive font-medium">
+                              {fieldState.error.message}
+                            </p>
                           )}
                         </>
                       )}
@@ -194,9 +253,9 @@ const ContactForm: React.FC = () => {
 
                   {/* Action Buttons */}
                   <div className="flex gap-3 pt-4">
-                    <Button 
-                      type="submit" 
-                      className="flex-1 h-11 font-medium bg-blue-600 hover:bg-blue-700" 
+                    <Button
+                      type="submit"
+                      className="flex-1 h-11 font-medium bg-blue-600 hover:bg-blue-700"
                       disabled={isLoading || logoutLoading}
                     >
                       {editingId ? "Update Contact" : "Add Contact"}
@@ -230,7 +289,8 @@ const ContactForm: React.FC = () => {
                     <div>
                       <CardTitle className="text-xl">Your Contacts</CardTitle>
                       <CardDescription>
-                        {contacts.length} contact{contacts.length !== 1 ? "s" : ""} total
+                        {contacts.length} contact
+                        {contacts.length !== 1 ? "s" : ""} total
                       </CardDescription>
                     </div>
                   </div>
@@ -246,12 +306,14 @@ const ContactForm: React.FC = () => {
                       {isLoading ? "Loading contacts..." : "No contacts yet"}
                     </h3>
                     {!isLoading && (
-                      <p className="text-muted-foreground">Add your first contact using the form on the left</p>
+                      <p className="text-muted-foreground">
+                        Add your first contact using the form on the left
+                      </p>
                     )}
                   </div>
                 ) : (
                   <div className="grid gap-4">
-                    {contacts.map((contact) => (
+                    {contacts.map((contact: Contact) => (
                       <Card
                         key={contact.id}
                         className="border border-border hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
@@ -270,7 +332,9 @@ const ContactForm: React.FC = () => {
                                 {contact.address && (
                                   <div className="flex items-center gap-2 text-muted-foreground">
                                     <MapPin className="h-4 w-4" />
-                                    <span className="text-sm">{contact.address}</span>
+                                    <span className="text-sm">
+                                      {contact.address}
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -307,7 +371,7 @@ const ContactForm: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ContactForm
+export default ContactForm;
